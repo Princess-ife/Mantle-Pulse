@@ -57,7 +57,7 @@ def analyze():
         df['trades_per_day'] = df['timeStamp'].dt.date.map(df['timeStamp'].dt.date.value_counts())
         error_rate = (df['isError'] == '1').sum() / len(df) * 100
         df = df.fillna(0)
-        
+
         behavior_profile = {
             "most_active_hour": int(df['trade_hour'].mode()[0]),
             "favorite_day": df['day_of_week'].mode()[0],
@@ -65,7 +65,7 @@ def analyze():
             "max_value_zscore": float(df['value_zscore'].max()),
             "max_trades_per_day": int(df['trades_per_day'].max()),
             "error_rate": float(error_rate),
-            "most_common_defi_action": df['functionName'].mode()[0]
+            "most_common_defi_action": simplify_defi_action(df['functionName'].mode()[0])
         }
 
         evaluation = evaluate_wallet(behavior_profile)
