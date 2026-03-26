@@ -5,7 +5,7 @@ import json
 
 load_dotenv()
 
-def get_ai_insights(behavior_profile):
+def get_ai_insights(behavior_profile, evaluation=None):
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
     prompt = f"""
@@ -41,12 +41,49 @@ EXAMPLE JSON:
     """
 
     try:
-      chat_completion = client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="llama-3.3-70b-versatile",
-        response_format={"type": "json_object"}
-    ) 
-      return json.loads(chat_completion.choices[0].message.content)
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"}
+        )
+
+        content = chat_completion.choices[0].message.content
+        if isinstance(content, str):
+            content = content.strip()
+
+        # Try to parse JSON safely
+        insight_data = {}
+        if isinstance(content, dict):
+            insight_data = content
+        else:
+            try:
+                insight_data = json.loads(content)
+            except json.JSONDecodeError:
+                try:
+                    start = content.index('{')
+                    end = content.rindex('}') + 1
+                    insight_data = json.loads(content[start:end])
+                except Exception as parse_err:
+                    print(f"AI JSON parsing failed: {parse_err} | content: {content}")
+                    insight_data = {}
+
+        verdict = insight_data.get('verdict') if insight_data.get('verdict') else (evaluation['verdict'] if evaluation else 'CAUTION')
+        risk_score = int(insight_data.get('risk_score', evaluation['risk_score'] if evaluation else 50))
+        reasons = insight_data.get('reasons', evaluation['reasons'] if evaluation else [])
+        if reasons is None:
+            reasons = []
+        if not isinstance(reasons, list):
+            reasons = [str(reasons)]
+
+        ai_explanation = insight_data.get('ai_explanation', '')
+
+        return {
+            'verdict': verdict,
+            'risk_score': risk_score,
+            'reasons': reasons,
+            'ai_explanation': ai_explanation
+        }
+
     except Exception as e:
         raise Exception(f"Groq AI Error: {str(e)}")
 
