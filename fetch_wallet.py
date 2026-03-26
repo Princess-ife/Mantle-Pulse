@@ -5,7 +5,7 @@ import os
 
 load_dotenv()
 
-WALLET_ADDRESS = os.getenv("WALLET_ADDRESS")
+#WALLET_ADDRESS = os.getenv("WALLET_ADDRESS")
 BASE_URL = "https://api.etherscan.io/v2/api"
 
 def fetch_wallet_transactions(WALLET_ADDRESS):
@@ -31,4 +31,4 @@ def fetch_wallet_transactions(WALLET_ADDRESS):
         print("No transactions found or an error occurred:", data["message"])
         return None
 
-fetch_wallet_transactions(WALLET_ADDRESS)
+#fetch_wallet_transactions(WALLET_ADDRESS)
