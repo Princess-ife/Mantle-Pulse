@@ -40,12 +40,13 @@ def analyze():
             return jsonify({"error": "Missing wallet address"}), 400
 
         from fetch_wallet import fetch_wallet_transactions
-        from risk_scorer import score_emotional_risk, get_verdict, evaluate_wallet
+        from risk_scorer import evaluate_wallet
+        from ai_analysis import get_ai_insights
 
         df = fetch_wallet_transactions(wallet_address)
 
-        if df is None or df.empty:
-            return jsonify({"error": "Could not fetch wallet data or empty transaction history"}), 404
+        if df.empty:
+            return jsonify({"error": "Empty transaction history"}), 404
 
         import pandas as pd
         df['timeStamp'] = pd.to_datetime(df['timeStamp'].astype(int), unit='s')
@@ -61,14 +62,19 @@ def analyze():
         behavior_profile = {
             "most_active_hour": int(df['trade_hour'].mode()[0]),
             "favorite_day": df['day_of_week'].mode()[0],
-            "avg_hours_between_trades": float(df['time_since_last_trade'].mean()),
-            "max_value_zscore": float(df['value_zscore'].max()),
+            "avg_hours_between_trades": round(float(df['time_since_last_trade'].mean()),2),
+            "max_value_zscore": round(float(df['value_zscore'].max()),2),
             "max_trades_per_day": int(df['trades_per_day'].max()),
-            "error_rate": float(error_rate),
+            "error_rate": round(float(error_rate),2),
             "most_common_defi_action": simplify_defi_action(df['functionName'].mode()[0])
         }
 
-        evaluation = evaluate_wallet(behavior_profile)
+        try:
+          ai_data = get_ai_insights(behavior_profile)
+          evaluation = ai_data
+        except Exception as ai_err:
+          app.logger.warning(f"AI Failed, falling back to Risk Scorer: {ai_err}")
+          evaluation = evaluate_wallet(behavior_profile)
 
         return jsonify({
             "behavior_profile": behavior_profile,
@@ -77,9 +83,12 @@ def analyze():
             "reasons": evaluation['reasons']
         })
 
+    except ValueError as e:
+        print(f"Value error: {e}")
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        app.logger.exception("Error analyzing wallet")
-        return jsonify({"error": "Server error: %s" % str(e)}), 500
+        app.logger.exception("System error during analysis")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

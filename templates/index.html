@@ -555,21 +555,18 @@ async function analyze() {
             body: JSON.stringify({ wallet_address: wallet })
         })
     
+    const data = await response.json()
 
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => response.statusText)
-            throw new Error(`API error ${response.status}: ${errorText}`)
-        }
-
-        const data = await response.json()
-
-        if (data.error) {
+       if (!response.ok || data.error) {
             document.getElementById('results').innerHTML = `
                 <div class="info-card">
-                    <p style="color: var(--red); font-family: 'Space Mono', monospace; font-size: 13px;">${data.error}</p>
+                    <h3 style="color: var(--red);">Analysis Failed</h3>
+                    <p style="color: var(--muted); font-family: 'Space Mono', monospace; font-size: 13px;">
+                        ${data.error || 'An unexpected error occurred.'}
+                    </p>
                 </div>
-            `
-            return
+            `;
+            return;
         }
 
         const verdict = data.verdict
@@ -644,7 +641,7 @@ async function analyze() {
         document.getElementById('results').innerHTML = `
             <div class="info-card">
                 <p style="color: var(--red); font-family: 'Space Mono', monospace; font-size: 13px;">
-                    Connection error. Please try again later.
+                    Connection error. ${err.message || 'Please try again later.'}
                 </p>
             </div>
         `

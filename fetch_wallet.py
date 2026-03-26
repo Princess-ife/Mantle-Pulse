@@ -28,7 +28,7 @@ def fetch_wallet_transactions(WALLET_ADDRESS):
         print(df[["hash", "from", "to", "value", "timeStamp"]].head())
         return df
     else:
-        print("No transactions found or an error occurred:", data["message"])
-        return None
+      error_msg = data.get('message', 'Invalid Mantle wallet or API connection failed')
+      raise Exception(f"Error: {error_msg}")
 
 #fetch_wallet_transactions(WALLET_ADDRESS)
