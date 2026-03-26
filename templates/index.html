@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MantlePulse — DeFi Behavioral Firewall</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --black: #0A0A0A;
+            --dark: #111111;
+            --card: #161616;
+            --border: #222222;
+            --green: #6CE5A0;
+            --green-dim: rgba(108, 229, 160, 0.1);
+            --green-glow: rgba(108, 229, 160, 0.2);
+            --white: #F5F5F5;
+            --muted: #666666;
+            --red: #FF4D4D;
+            --yellow: #FFD166;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--black);
+            color: var(--white);
+            font-family: 'Syne', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(108,229,160,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(108,229,160,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Glow orb */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(108,229,160,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* NAV */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span { color: var(--green); }
+
+        .nav-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--green);
+            border: 1px solid var(--green);
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 80px 0 60px;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--green);
+            background: var(--green-dim);
+            border: 1px solid rgba(108,229,160,0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+
+        .hero-tag::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span { color: var(--green); }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--muted);
+            max-width: 480px;
+            margin: 0 auto 48px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* SEARCH BOX */
+        .search-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 8px 8px 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 640px;
+            margin: 0 auto;
+            transition: border-color 0.3s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px var(--green-glow);
+        }
+
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--white);
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
+        .search-box input::placeholder { color: var(--muted); }
+
+        .analyze-btn {
+            background: var(--green);
+            color: var(--black);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .analyze-btn:hover {
+            background: #88edaf;
+            transform: translateY(-1px);
+        }
+
+        .analyze-btn:active { transform: translateY(0); }
+
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* STATS ROW */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 48px 0;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--green);
+            letter-spacing: -1px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        /* RESULTS */
+        #results { margin-top: 0; }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* VERDICT CARD */
+        .verdict-card {
+            grid-column: 1 / -1;
+            border-radius: 16px;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            animation: slideUp 0.5s ease;
+        }
+
+        .verdict-card.green {
+            background: linear-gradient(135deg, rgba(108,229,160,0.1), rgba(108,229,160,0.05));
+            border: 1px solid rgba(108,229,160,0.3);
+        }
+
+        .verdict-card.yellow {
+            background: linear-gradient(135deg, rgba(255,209,102,0.1), rgba(255,209,102,0.05));
+            border: 1px solid rgba(255,209,102,0.3);
+        }
+
+        .verdict-card.red {
+            background: linear-gradient(135deg, rgba(255,77,77,0.1), rgba(255,77,77,0.05));
+            border: 1px solid rgba(255,77,77,0.3);
+        }
+
+        .verdict-icon {
+            font-size: 52px;
+            flex-shrink: 0;
+        }
+
+        .verdict-content { flex: 1; }
+
+        .verdict-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            opacity: 0.6;
+        }
+
+        .verdict-title {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+
+        .verdict-card.green .verdict-title { color: var(--green); }
+        .verdict-card.yellow .verdict-title { color: var(--yellow); }
+        .verdict-card.red .verdict-title { color: var(--red); }
+
+        .verdict-text {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .risk-score-bar {
+            margin-top: 16px;
+            background: var(--border);
+            border-radius: 4px;
+            height: 4px;
+            overflow: hidden;
+        }
+
+        .risk-score-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .green .risk-score-fill { background: var(--green); }
+        .yellow .risk-score-fill { background: var(--yellow); }
+        .red .risk-score-fill { background: var(--red); }
+
+        .risk-score-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        /* INFO CARDS */
+        .info-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            animation: slideUp 0.5s ease;
+        }
+
+        .info-card h3 {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .profile-item { }
+
+        .profile-item .label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 4px;
+            font-weight: 400;
+        }
+
+        .profile-item .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: -0.3px;
+        }
+
+        .profile-item .value.green { color: var(--green); }
+
+        /* REASONS LIST */
+        .reasons-list { list-style: none; }
+
+        .reasons-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .reasons-list li:last-child { border-bottom: none; }
+
+        .reasons-list li::before {
+            content: '⚠';
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .no-reasons {
+            font-size: 14px;
+            color: var(--green);
+            font-weight: 400;
+        }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 60px 0;
+            animation: slideUp 0.3s ease;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading p {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        /* FOOTER */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 0;
+            margin-top: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        footer p {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'Space Mono', monospace;
+        }
+
+        footer span { color: var(--green); }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .results-grid { grid-template-columns: 1fr; }
+            .profile-grid { grid-template-columns: 1fr 1fr; }
+            .stats-row { grid-template-columns: 1fr; }
+            .verdict-card { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- NAV -->
+    <nav>
+        <div class="logo">
+            <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+                <rect width="36" height="36" rx="8" fill="#161616"/>
+                <path d="M18 6L28 12V24L18 30L8 24V12L18 6Z" stroke="#6CE5A0" stroke-width="1.5" fill="none"/>
+                <path d="M18 6L18 18M18 18L28 24M18 18L8 24" stroke="#6CE5A0" stroke-width="1" opacity="0.4"/>
+                <circle cx="18" cy="18" r="3" fill="#6CE5A0"/>
+            </svg>
+            <div class="logo-text">Mantle<span>Pulse</span></div>
+        </div>
+        <div class="nav-badge">MANTLE NETWORK</div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-tag">LIVE ON MANTLE</div>
+        <h1>Your DeFi<br><span>Behavioral</span> Firewall</h1>
+        <p>Paste any Mantle wallet address and get an AI-powered analysis of trading patterns, emotional risk signals, and behavioral insights.</p>
+
+        <div class="search-box">
+            <input type="text" id="wallet" placeholder="0x... paste Mantle wallet address" />
+            <button class="analyze-btn" onclick="analyze()" id="analyzeBtn">
+                Analyze Wallet
+            </button>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-num">6</div>
+            <div class="stat-label">Behavioral Features Analyzed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num">AI</div>
+            <div class="stat-label">Powered by Groq LLaMA</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num">🔴🟡🟢</div>
+            <div class="stat-label">3-Level Risk Verdict</div>
+        </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results"></div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>Built on <span>Mantle Network</span> · MantlePulse v1.0</p>
+        <p>Powered by <span>Groq AI</span> + Onchain Data</p>
+    </footer>
+
+</div>
+
+<script>
+async function analyze() {
+    const wallet = document.getElementById('wallet').value.trim()
+    if (!wallet) {
+        alert('Please enter a wallet address')
+        return
+    }
+
+    const btn = document.getElementById('analyzeBtn')
+    btn.disabled = true
+    btn.textContent = 'Analyzing...'
+
+    document.getElementById('results').innerHTML = `
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>FETCHING ONCHAIN DATA...</p>
+        </div>
+    `
+
+    try {
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet_address: wallet })
+        })
+    
+
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => response.statusText)
+            throw new Error(`API error ${response.status}: ${errorText}`)
+        }
+
+        const data = await response.json()
+
+        if (data.error) {
+            document.getElementById('results').innerHTML = `
+                <div class="info-card">
+                    <p style="color: var(--red); font-family: 'Space Mono', monospace; font-size: 13px;">${data.error}</p>
+                </div>
+            `
+            return
+        }
+
+        const verdict = data.verdict
+        const score = data.risk_score
+        const profile = data.behavior_profile
+        const reasons = data.reasons
+
+        let cardClass = 'green'
+        let icon = '🟢'
+        if (verdict.includes('CAUTION')) { cardClass = 'yellow'; icon = '🟡' }
+        if (verdict.includes('EMOTIONAL')) { cardClass = 'red'; icon = '🔴' }
+
+        const cleanVerdict = verdict.replace('🟢', '').replace('🟡', '').replace('🔴', '').trim()
+
+        const reasonsHTML = reasons.length > 0
+            ? `<ul class="reasons-list">${reasons.map(r => `<li>${r}</li>`).join('')}</ul>`
+            : `<p class="no-reasons">✓ No behavioral risk patterns detected</p>`
+
+        document.getElementById('results').innerHTML = `
+            <div class="results-grid">
+                <div class="verdict-card ${cardClass}">
+                    <div class="verdict-icon">${icon}</div>
+                    <div class="verdict-content">
+                        <div class="verdict-label">RISK VERDICT</div>
+                        <div class="verdict-title">${cleanVerdict}</div>
+                        <div class="verdict-text">Risk Score: ${score}/100</div>
+                        <div class="risk-score-bar">
+                            <div class="risk-score-fill" style="width: ${score}%"></div>
+                        </div>
+                        <div class="risk-score-label">${score}/100 risk score</div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>Behavioral Profile</h3>
+                    <div class="profile-grid">
+                        <div class="profile-item">
+                            <div class="label">Most Active Hour</div>
+                            <div class="value green">${profile.most_active_hour}:00</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="label">Favorite Day</div>
+                            <div class="value">${profile.favorite_day}</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="label">Avg Hours Between Trades</div>
+                            <div class="value">${profile.avg_hours_between_trades.toFixed(0)}h</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="label">Max Trades / Day</div>
+                            <div class="value">${profile.max_trades_per_day}</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="label">Error Rate</div>
+                            <div class="value">${profile.error_rate.toFixed(1)}%</div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="label">Top DeFi Action</div>
+                            <div class="value" style="font-size:13px">${profile.most_common_defi_action}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>Risk Signals</h3>
+                    ${reasonsHTML}
+                </div>
+            </div>
+        `
+    } catch (err) {
+        console.log('Error analyzing wallet:', err)
+        document.getElementById('results').innerHTML = `
+            <div class="info-card">
+                <p style="color: var(--red); font-family: 'Space Mono', monospace; font-size: 13px;">
+                    Connection error. Please try again later.
+                </p>
+            </div>
+        `
+    } finally {
+        btn.disabled = false
+        btn.textContent = 'Analyze Wallet'
+    }
+}
+
+document.getElementById('wallet').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') analyze()
+})
+</script>
+</body>
+</html>
