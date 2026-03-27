@@ -5,8 +5,9 @@ import json
 
 load_dotenv()
 
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 def get_ai_insights(behavior_profile, evaluation=None):
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
     prompt = f"""
     Analyze the following DeFi behavior profile from the Mantle Blockchain and return a high-fidelity risk assessment.
@@ -86,4 +87,3 @@ EXAMPLE JSON:
 
     except Exception as e:
         raise Exception(f"Groq AI Error: {str(e)}")
-
