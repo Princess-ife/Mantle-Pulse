@@ -45,7 +45,8 @@ EXAMPLE JSON:
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"},
+            seed=42
         )
 
         content = chat_completion.choices[0].message.content
